@@ -23,10 +23,10 @@ public partial class App : Application
             // Add navigation support for toolkit controls such as TabBar and NavigationView
             .UseToolkitNavigation()
             .Configure(host => host
-#if DEBUG
+                #if DEBUG
                 // Switch to Development environment when running in DEBUG
                 .UseEnvironment(Environments.Development)
-#endif
+                #endif
                 .UseLogging(configure: (context, logBuilder) =>
                 {
                     // Configure log levels for different categories of logging
@@ -67,10 +67,10 @@ public partial class App : Application
                 .UseLocalization()
                 .UseHttp((context, services) =>
                 {
-#if DEBUG
+                    #if DEBUG
                     // DelegatingHandler will be automatically injected
                     services.AddTransient<DelegatingHandler, DebugHttpHandler>();
-#endif
+                    #endif
 
                 })
                 .UseAuthentication(auth =>
@@ -122,9 +122,9 @@ public partial class App : Application
             );
         MainWindow = builder.Window;
 
-#if DEBUG
+        #if DEBUG
         MainWindow.UseStudio();
-#endif
+        #endif
         MainWindow.SetWindowIcon();
 
         Host = await builder.NavigateAsync<Shell>
