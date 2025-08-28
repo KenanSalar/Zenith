@@ -1,33 +1,48 @@
 name: CI
 
+# This workflow runs on pushes and pull requests to main, dev, and release branches.
 on:
   push:
     branches:
       - main
-      - release/**
-
+      - dev
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
       - main
-      - release/**
+      - dev
+
 env:
   STEP_TIMEOUT_MINUTES: 60
 
 jobs:
   smoke_test:
     name: Smoke Test (Debug Build of Zenith.App)
+    # This job runs ONLY on pushes to the 'main' branch (e.g., after a PR is merged).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
+      # Caches dependencies to speed up subsequent workflow runs.
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.dotnet/packs
+            ~/.dotnet/workload-packs
+          # The cache key is based on package versions and the .NET SDK version.
+          key: ${{ runner.os }}-dotnet-${{ hashFiles('**/Directory.Packages.props', '**/global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dotnet-
+
       - name: Install Dependencies
         timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
         uses: "./.github/steps/install_dependencies"
 
-      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.3.1
 
@@ -37,12 +52,15 @@ jobs:
 
   unit_test:
     name: Unit Tests
+    # This job runs on pushes to 'dev' AND on pull requests targeting 'main'.
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/dev') || (github.event_name == 'pull_request' && github.base_ref == 'main')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-    
+
+      # Caches dependencies to speed up subsequent workflow runs.
       - name: Cache Dependencies
         uses: actions/cache@v3
         with:
@@ -50,7 +68,8 @@ jobs:
             ~/.nuget/packages
             ~/.dotnet/packs
             ~/.dotnet/workload-packs
-          key: ${{ runner.os }}-dotnet-${{ hashFiles('**/Directory.Packages.props') }}
+          # The cache key is based on package versions and the .NET SDK version.
+          key: ${{ runner.os }}-dotnet-${{ hashFiles('**/Directory.Packages.props', '**/global.json') }}
           restore-keys: |
             ${{ runner.os }}-dotnet-
 
@@ -58,14 +77,13 @@ jobs:
         timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
         uses: "./.github/steps/install_dependencies"
 
-      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.3.1
 
       - name: Build Zenith.App.Tests (Release)
         shell: pwsh
-        run: msbuild ./Zenith.App.Tests/Zenith.App.Tests.csproj /p:Configuration=Release /p:OverrideTargetFramework=net9.0 /r
+        run: msbuild ./Zenith.App.Tests/Zenith.App.Tests.csproj /p:Configuration=Release /r
 
       - name: Run Unit Tests
         shell: pwsh
-        run: dotnet test ./Zenith.App.Tests/Zenith.App.Tests.csproj --no-build -c Release --logger GitHubActions --blame-crash --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        run: dotnet test ./Zenith.App.Tests/Zenith.App.Tests.csproj --no-build -c Release -f net9.0-desktop --logger GitHubActions --blame-crash --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
