@@ -1,6 +1,6 @@
 name: CI
 
-# This workflow runs on pushes and pull requests to main, dev, and release branches.
+# This workflow runs on pushes and pull requests to the main and dev branches.
 on:
   push:
     branches:
@@ -34,7 +34,7 @@ jobs:
             ~/.nuget/packages
             ~/.dotnet/packs
             ~/.dotnet/workload-packs
-          # The cache key is based on package versions and the .NET SDK version.
+          # The cache is invalidated when package versions or the SDK version changes.
           key: ${{ runner.os }}-dotnet-${{ hashFiles('**/Directory.Packages.props', '**/global.json') }}
           restore-keys: |
             ${{ runner.os }}-dotnet-
@@ -43,12 +43,10 @@ jobs:
         timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
         uses: "./.github/steps/install_dependencies"
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.3.1
-
+      # Build the desktop head of the app using the dotnet CLI.
       - name: Build Zenith.App (Debug)
         shell: pwsh
-        run: msbuild ./Zenith.App/Zenith.App.csproj /r
+        run: dotnet build ./Zenith.App/Zenith.App.csproj -f net9.0-desktop -c Debug
 
   unit_test:
     name: Unit Tests
@@ -68,7 +66,7 @@ jobs:
             ~/.nuget/packages
             ~/.dotnet/packs
             ~/.dotnet/workload-packs
-          # The cache key is based on package versions and the .NET SDK version.
+          # The cache is invalidated when package versions or the SDK version changes.
           key: ${{ runner.os }}-dotnet-${{ hashFiles('**/Directory.Packages.props', '**/global.json') }}
           restore-keys: |
             ${{ runner.os }}-dotnet-
@@ -77,13 +75,8 @@ jobs:
         timeout-minutes: ${{ fromJSON(env.STEP_TIMEOUT_MINUTES) }}
         uses: "./.github/steps/install_dependencies"
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.3.1
-
-      - name: Build Zenith.App.Tests (Release)
-        shell: pwsh
-        run: msbuild ./Zenith.App.Tests/Zenith.App.Tests.csproj /p:Configuration=Release /r
-
+      # Build and run the unit tests using the dotnet CLI.
+      # The `dotnet test` command automatically restores and builds the project.
       - name: Run Unit Tests
         shell: pwsh
-        run: dotnet test ./Zenith.App.Tests/Zenith.App.Tests.csproj --no-build -c Release -f net9.0-desktop --logger GitHubActions --blame-crash --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        run: dotnet test ./Zenith.App.Tests/Zenith.App.Tests.csproj -c Release -f net9.0-desktop --logger GitHubActions --blame-crash --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
