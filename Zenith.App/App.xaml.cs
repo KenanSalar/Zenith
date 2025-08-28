@@ -2,6 +2,7 @@ using Uno.Resizetizer;
 using Uno.Toolkit.UI;
 
 namespace Zenith.App;
+
 public partial class App : Application
 {
     /// <summary>
@@ -67,8 +68,8 @@ public partial class App : Application
                 .UseHttp((context, services) =>
                 {
 #if DEBUG
-                // DelegatingHandler will be automatically injected
-                services.AddTransient<DelegatingHandler, DebugHttpHandler>();
+                    // DelegatingHandler will be automatically injected
+                    services.AddTransient<DelegatingHandler, DebugHttpHandler>();
 #endif
 
                 })
