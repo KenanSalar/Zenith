@@ -1,4 +1,5 @@
 using Uno.Resizetizer;
+using Uno.Toolkit.UI;
 
 namespace Zenith.App;
 public partial class App : Application

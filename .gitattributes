@@ -1,0 +1,12 @@
+# Normalize all text files to use LF line endings in the repository
+* text=auto eol=lf
+
+# Denote all files that are truly binary and should not be touched
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.dll binary
+*.exe binary
+*.pdb binary
+*.nupkg binary
