@@ -44,8 +44,4 @@
     <DefineConstants>$(DefineConstants);USE_UITESTS</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Uno.Toolkit.WinUI" />
-  </ItemGroup>
-
 </Project>
