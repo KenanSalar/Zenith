@@ -1,0 +1,10 @@
+{
+  "background_color": "#ffffff",
+  "description": "Zenith.App",
+  "display": "standalone",
+  "name": "Zenith.App",
+  "short_name": "Zenith.App",
+  "start_url": "/index.html",
+  "theme_color": "#ffffff",
+  "scope": "/"
+}

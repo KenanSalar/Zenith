@@ -1,0 +1,33 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+
+    tty: true
+
+    networks:
+      - zenith-network
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - zenith_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: zenith_db
+      POSTGRES_USER: zenith_user
+      POSTGRES_PASSWORD: your_strong_password_here
+    ports:
+      - "5432:5432"
+    networks:
+      - zenith-network
+
+volumes:
+  zenith_postgres_data:
+
+networks:
+  zenith-network:
+    driver: bridge
